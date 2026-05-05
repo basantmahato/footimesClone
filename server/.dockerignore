@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment secrets – NEVER bake .env into the image
+.env
+.env.*
+
+# Git
+.git
+.gitignore
+
+# Editor / OS noise
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# Docker itself
+Dockerfile
+.dockerignore
