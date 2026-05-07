@@ -18,30 +18,29 @@ const AdminProfile: React.FC<AdminProfileProps> = ({ admin }) => {
 
   const profilePicUrl = profilePicture
     ? `https://api.footimes.com/admin${profilePicture}`
-    : "/assets/default-avatar.png";
+    : "https://cdn3.iconfinder.com/data/icons/essential-rounded/64/Rounded-31-512.png";
 
   return (
-    <div className="bg-zinc-900 border border-white/5 p-6 rounded-3xl shadow-xl flex items-center space-x-6 animate-in fade-in slide-in-from-left-4 duration-500">
+    <div className="bg-white border border-black/10 p-6 rounded-2xl shadow-sm flex items-center space-x-6">
       <div className="relative h-20 w-20 shrink-0">
-        <div className="absolute -inset-1 bg-gradient-to-tr from-pink-600 to-purple-600 rounded-full blur opacity-25"></div>
-        <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-pink-500">
+        <div className="relative w-full h-full rounded-full overflow-hidden border border-black/10">
             <Image
                 src={profilePicUrl}
                 alt={`${fullName}'s Profile`}
                 fill
                 className="object-cover"
                 onError={(e: any) => {
-                    e.target.src = "/assets/default-avatar.png";
+                    e.target.src = "https://cdn3.iconfinder.com/data/icons/essential-rounded/64/Rounded-31-512.png";
                 }}
             />
         </div>
       </div>
       <div>
-        <h3 className="text-xl font-black text-white tracking-tighter">{fullName}</h3>
-        <p className="text-zinc-500 text-xs font-bold uppercase tracking-widest">@{username}</p>
+        <h3 className="text-xl font-bold text-black tracking-tight">{fullName}</h3>
+        <p className="text-black/40 text-[10px] font-bold uppercase tracking-widest">@{username}</p>
         <div className="flex items-center gap-2 mt-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span className="text-green-500 text-[10px] font-black uppercase tracking-widest">Online</span>
+            <span className="w-1.5 h-1.5 bg-black rounded-full animate-pulse"></span>
+            <span className="text-black text-[10px] font-black uppercase tracking-widest">Authorized</span>
         </div>
       </div>
     </div>

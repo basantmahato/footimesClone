@@ -15,6 +15,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn3.iconfinder.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'static.vecteezy.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn-icons-png.flaticon.com',
+      },
     ],
   },
 };

@@ -10,6 +10,7 @@ import DateScroller from "@/components/DateScroller";
 import LiveMatches from "@/components/LiveMatches";
 import NewsCard from "@/components/NewsCard";
 import { formatTimeAgo } from "@/utils/timeAgo";
+import { slugify } from "@/utils/slugify";
 
 const socket = io("https://api.footimes.com");
 
@@ -356,7 +357,7 @@ export default function Home() {
             ) : (
               <div className="flex overflow-x-auto gap-5 pb-6 scrollbar-hide">
                 {latestNews.map((item) => (
-                  <Link key={item._id} href={`/news/${item._id}`} className="transition-transform hover:scale-[1.02]">
+                  <Link key={item._id} href={`/news/${slugify(item.title)}--${item._id}`} className="transition-transform hover:scale-[1.02]">
                     <NewsCard
                       image={item.thumbnail}
                       tittle={item.title}

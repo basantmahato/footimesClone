@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { useAdminTheme } from "./AdminThemeContext";
 
 interface Tournament {
   _id: string;
@@ -10,6 +11,9 @@ interface Tournament {
 }
 
 const AdminTournamentPage = () => {
+  const { theme } = useAdminTheme();
+  const isDark = theme === 'dark';
+
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [form, setForm] = useState({ name: "", location: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -77,56 +81,64 @@ const AdminTournamentPage = () => {
     setEditingId(null);
   };
 
+  const themeInput = isDark ? "bg-white/5 border-white/10 text-white" : "bg-white border-black/10 text-black";
+  const themeTextMuted = isDark ? "text-white/40" : "text-black/40";
+  const themeTextMoreMuted = isDark ? "text-white/20" : "text-black/20";
+  const themeCardInner = isDark ? "border-white/5" : "border-black/5";
+
   return (
-    <div className="p-4 w-full">
-      <div className="max-w-4xl mx-auto bg-zinc-900 border border-white/5 rounded-3xl p-8 shadow-2xl">
+    <div className={`p-8 ${isDark ? 'bg-transparent text-white' : 'bg-white text-black'} transition-colors duration-300`}>
+      <div className="max-w-4xl mx-auto">
         {!showForm ? (
           <>
-            <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-black uppercase tracking-tighter">Tournaments</h2>
+            <div className="flex justify-between items-center mb-10">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight mb-1">Tournaments</h2>
+                <p className={`${themeTextMuted} text-xs`}>Manage all available competition categories.</p>
+              </div>
               <button
                 onClick={() => {
                   resetForm();
                   setShowForm(true);
                 }}
-                className="py-2 px-6 bg-pink-600 hover:bg-pink-700 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-pink-600/20"
+                className={`py-2 px-6 ${isDark ? 'bg-white text-black hover:bg-white/90' : 'bg-black text-white hover:bg-black/90'} text-[10px] font-black uppercase tracking-widest rounded-lg transition-all shadow-sm`}
               >
-                Add New Tournament
+                Create New
               </button>
             </div>
 
             {loading ? (
-              <div className="flex justify-center p-12"><span className="loading loading-spinner text-pink-500"></span></div>
+              <div className="flex justify-center p-12"><span className="loading loading-spinner loading-sm text-black/20 dark:text-white/20"></span></div>
             ) : tournaments.length === 0 ? (
-              <div className="text-center py-20 border border-dashed border-zinc-800 rounded-3xl">
-                <p className="text-zinc-500 font-medium">No tournaments added yet.</p>
+              <div className={`text-center py-20 border border-dashed ${themeCardInner} rounded-2xl`}>
+                <p className={`${themeTextMuted} text-xs font-bold uppercase tracking-widest`}>No tournaments found.</p>
               </div>
             ) : (
-              <div className="overflow-hidden rounded-2xl border border-white/5 bg-black/30">
-                <table className="w-full text-sm">
+              <div className={`border ${isDark ? 'border-white/10' : 'border-black/5'} rounded-xl overflow-hidden shadow-sm`}>
+                <table className={`min-w-full divide-y ${isDark ? 'divide-white/5' : 'divide-black/5'}`}>
                   <thead>
-                    <tr className="bg-zinc-900 text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-black">
+                    <tr className={`${isDark ? 'bg-white/5' : 'bg-black/[0.02]'} text-[10px] uppercase tracking-widest ${themeTextMoreMuted} font-black`}>
                       <th className="px-6 py-4 text-left">Tournament Name</th>
                       <th className="px-6 py-4 text-left">Location</th>
                       <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/5">
+                  <tbody className={`divide-y ${isDark ? 'divide-white/5' : 'divide-black/5'} ${isDark ? 'bg-transparent' : 'bg-white'}`}>
                     {tournaments.map((t) => (
-                      <tr key={t._id} className="hover:bg-white/5 transition-colors">
-                        <td className="px-6 py-4 font-bold text-white">{t.name}</td>
-                        <td className="px-6 py-4 text-zinc-400 italic text-xs">{t.location}</td>
+                      <tr key={t._id} className={`${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.01]'} transition-colors`}>
+                        <td className="px-6 py-4 font-bold text-sm">{t.name}</td>
+                        <td className={`px-6 py-4 ${themeTextMuted} text-xs font-medium`}>{t.location}</td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-3">
+                          <div className="flex justify-end gap-4">
                             <button
                               onClick={() => handleEdit(t)}
-                              className="text-xs font-bold text-pink-500 hover:underline"
+                              className="text-[10px] font-black uppercase text-inherit hover:underline"
                             >
                               Edit
                             </button>
                             <button
                               onClick={() => handleDelete(t._id)}
-                              className="text-xs font-bold text-red-500 hover:underline"
+                              className="text-[10px] font-black uppercase text-red-500 hover:underline"
                             >
                               Delete
                             </button>
@@ -140,35 +152,41 @@ const AdminTournamentPage = () => {
             )}
           </>
         ) : (
-          <div className="animate-in fade-in zoom-in duration-300">
-            <h2 className="text-2xl font-black mb-8 uppercase tracking-tighter">
-              {editingId ? "Edit" : "Add"} <span className="text-pink-500">Tournament</span>
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 max-w-lg mx-auto">
+            <h2 className="text-xl font-bold mb-8 tracking-tight">
+              {editingId ? "Update" : "Create"} Tournament
             </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
-                <input
-                  name="name"
-                  placeholder="Tournament Name"
-                  value={form.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-4 rounded-2xl bg-zinc-800 border border-white/10 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 outline-none"
-                />
-                <input
-                  name="location"
-                  placeholder="Location"
-                  value={form.location}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-4 rounded-2xl bg-zinc-800 border border-white/10 text-white placeholder:text-gray-500 focus:ring-2 focus:ring-pink-500 outline-none"
-                />
+                <div className="space-y-1.5">
+                  <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Tournament Name</label>
+                  <input
+                    name="name"
+                    placeholder="e.g. Champions League"
+                    value={form.name}
+                    onChange={handleChange}
+                    required
+                    className={`w-full ${themeInput} rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-1 focus:ring-black dark:focus:ring-white outline-none`}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Location</label>
+                  <input
+                    name="location"
+                    placeholder="e.g. Europe"
+                    value={form.location}
+                    onChange={handleChange}
+                    required
+                    className={`w-full ${themeInput} rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-1 focus:ring-black dark:focus:ring-white outline-none`}
+                  />
+                </div>
               </div>
-              <div className="flex gap-4 mt-8">
+              <div className="flex gap-4 pt-4">
                 <button
                   type="submit"
-                  className="flex-1 bg-pink-600 hover:bg-pink-700 text-white font-bold py-4 rounded-2xl shadow-xl shadow-pink-600/20 transition-all active:scale-[0.98]"
+                  className={`flex-1 ${isDark ? 'bg-white text-black' : 'bg-black text-white'} font-bold text-xs uppercase tracking-widest py-3.5 rounded-lg hover:opacity-90 transition-all active:scale-[0.98]`}
                 >
-                  {editingId ? "Update Tournament" : "Create Tournament"}
+                  {editingId ? "Save Changes" : "Create Tournament"}
                 </button>
                 <button
                   type="button"
@@ -176,7 +194,7 @@ const AdminTournamentPage = () => {
                     resetForm();
                     setShowForm(false);
                   }}
-                  className="px-8 py-4 bg-zinc-800 hover:bg-zinc-700 text-white font-bold rounded-2xl transition-all"
+                  className={`px-8 py-3.5 border ${isDark ? 'border-white/10 hover:bg-white/5' : 'border-black/10 hover:bg-black/5'} text-inherit font-bold text-xs uppercase tracking-widest rounded-lg transition-all`}
                 >
                   Cancel
                 </button>

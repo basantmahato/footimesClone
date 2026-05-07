@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, use } from "react";
-import { useParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
 
@@ -36,12 +35,14 @@ interface LiveScore {
   venue?: string;
 }
 
-export default function TournamentDetailsPage() {
-  const params = useParams();
-  const id = params?.id as string;
+interface Props {
+  id: string;
+  initialInfo: Tournament;
+}
 
+export default function TournamentDetailsClient({ id, initialInfo }: Props) {
   const [activeTab, setActiveTab] = useState("fixtures");
-  const [tournamentInfo, setTournamentInfo] = useState<Tournament | null>(null);
+  const [tournamentInfo, setTournamentInfo] = useState<Tournament>(initialInfo);
   const [allFixtures, setAllFixtures] = useState<Fixture[]>([]);
   const [allLiveScores, setAllLiveScores] = useState<LiveScore[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,20 +50,15 @@ export default function TournamentDetailsPage() {
 
   useEffect(() => {
     const fetchTournamentData = async () => {
-      if (!id) return;
       try {
-        setLoading(true);
-        const [tournamentRes, fixturesRes, liveScoresRes] = await Promise.all([
-          axios.get(`https://api.footimes.com/api/tournaments/${id}`),
+        const [fixturesRes, liveScoresRes] = await Promise.all([
           axios.get(`https://api.footimes.com/api/fixtures?tournament=${id}`),
           axios.get(`https://api.footimes.com/api/livescore/all`)
         ]);
 
-        setTournamentInfo(tournamentRes.data);
         setAllFixtures(fixturesRes.data);
-        
         const tournamentLiveScores = liveScoresRes.data.filter(
-          (ls: LiveScore) => ls.tournamentName === tournamentRes.data.name
+          (ls: LiveScore) => ls.tournamentName === initialInfo.name
         );
         setAllLiveScores(tournamentLiveScores);
       } catch (err) {
@@ -74,12 +70,12 @@ export default function TournamentDetailsPage() {
     };
 
     fetchTournamentData();
-  }, [id]);
+  }, [id, initialInfo.name]);
 
   const processedMatches = allFixtures
     .map((f) => {
       const liveScoreEntry = allLiveScores.find((ls) => ls.fixtureId === f._id);
-      const venue = f.venue || tournamentInfo?.location || "";
+      const venue = f.venue || tournamentInfo.location || "";
 
       if (liveScoreEntry && liveScoreEntry.status === "ended") {
         const date = new Date(liveScoreEntry.startedAt || f.matchDate);
@@ -134,29 +130,13 @@ export default function TournamentDetailsPage() {
       awayScore: ls.scoreB,
       homeLogo: defaultTeamLogo,
       awayLogo: defaultTeamLogo,
-      venue: ls.venue || tournamentInfo?.location || "",
+      venue: ls.venue || tournamentInfo.location || "",
     }));
 
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen bg-[#121212]">
         <span className="loading loading-spinner text-pink-500"></span>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="p-4 text-red-500 bg-[#121212] min-h-screen text-center mt-20">
-        {error}
-      </div>
-    );
-  }
-
-  if (!tournamentInfo) {
-    return (
-      <div className="p-4 text-gray-400 bg-[#121212] min-h-screen text-center mt-20">
-        Tournament not found.
       </div>
     );
   }

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import NewsCard from "@/components/NewsCard";
 import { useRouter } from "next/navigation";
 import { formatTimeAgo } from "@/utils/timeAgo";
+import { slugify } from "@/utils/slugify";
 import axios from "axios";
 import Image from "next/image";
 
@@ -87,7 +88,7 @@ const NewsPage = () => {
                 {newsCardsToShow.map((item) => (
                   <div
                     key={item._id}
-                    onClick={() => router.push(`/news/${item._id}`)}
+                    onClick={() => router.push(`/news/${slugify(item.title)}--${item._id}`)}
                     className="cursor-pointer transition-transform hover:scale-[1.02]"
                   >
                     <NewsCard
@@ -113,7 +114,7 @@ const NewsPage = () => {
               {newsListToShow.map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => router.push(`/news/${item._id}`)}
+                  onClick={() => router.push(`/news/${slugify(item.title)}--${item._id}`)}
                   className="group cursor-pointer flex flex-col space-y-4 bg-zinc-900/50 border border-white/5 rounded-3xl p-3 transition-all hover:bg-zinc-900 hover:border-white/10"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-2xl bg-zinc-900">

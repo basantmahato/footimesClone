@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import axios from "axios";
+import { slugify } from "@/utils/slugify";
 
 const defaultTournamentLogo = "https://static.vecteezy.com/system/resources/thumbnails/037/049/153/small_2x/football-match-clipart-flat-design-icon-isolated-on-transparent-background-3d-render-sport-and-exercise-concept-png.png";
 
@@ -81,7 +82,7 @@ export default function TournamentPage() {
                 </div>
                 <div>
                   <div className="text-[10px] text-gray-500 mb-0.5">{tourn.location || 'Unknown Location'}</div>
-                  <Link href={`/tournament/${tourn._id}`}>
+                  <Link href={`/tournament/${slugify(tourn.name)}--${tourn._id}`}>
                     <div className="text-[14px] text-white font-medium hover:text-pink-400 transition-colors">
                       {tourn.name}
                     </div>

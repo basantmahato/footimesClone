@@ -5,6 +5,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import Link from "next/link";
 import { HiOutlineX } from "react-icons/hi";
+import { useAdminTheme } from "./AdminThemeContext";
 
 const socket = io("https://api.footimes.com");
 
@@ -30,6 +31,9 @@ interface LiveMatchStatus {
 }
 
 export default function AdminMatchesPage() {
+  const { theme } = useAdminTheme();
+  const isDark = theme === 'dark';
+
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
   const [fixtures, setFixtures] = useState<Fixture[]>([]);
   const [selectedTournamentId, setSelectedTournamentId] = useState("");
@@ -191,135 +195,130 @@ export default function AdminMatchesPage() {
     (a, b) => new Date(b.matchDate).getTime() - new Date(a.matchDate).getTime()
   );
 
-  return (
-    <div className="p-6 max-w-6xl mx-auto text-white bg-black">
-      <h1 className="text-xl font-bold mb-8 text-center text-pink-500 uppercase tracking-tighter">
-        Match Control Panel
-      </h1>
+  const themeInput = isDark ? "bg-zinc-900 border-white/10 text-white" : "bg-white border-black/10 text-black";
+  const themeTextMuted = isDark ? "text-white/40" : "text-black/40";
+  const themeTextMoreMuted = isDark ? "text-white/20" : "text-black/20";
+  const themeCardInner = isDark ? "border-white/5 bg-white/[0.01]" : "border-black/5 bg-white";
 
-      <nav className="bg-zinc-900/50 border border-white/5 p-4 rounded-3xl shadow-xl mb-8">
-        <div className="flex flex-wrap gap-4 justify-between items-center">
-          <div className="flex flex-wrap gap-2">
-            {tournaments.map((t) => (
-              <button
-                key={t._id}
-                onClick={() => setSelectedTournamentId(t._id)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                  selectedTournamentId === t._id
-                    ? "bg-pink-600 text-white shadow-lg shadow-pink-600/20"
-                    : "bg-zinc-800 text-zinc-400 hover:text-white"
-                }`}
-              >
-                {t.name}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-3">
+  return (
+    <div className={`p-8 ${isDark ? 'bg-transparent text-white' : 'bg-white text-black'} transition-colors duration-300`}>
+      <div className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+           <h1 className="text-2xl font-bold tracking-tight mb-1">Match Management</h1>
+           <p className={`${themeTextMuted} text-xs`}>Control live scores and update fixture statuses.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
             <input
               type="date"
               value={selectedDate}
               onChange={e => setSelectedDate(e.target.value)}
-              className="bg-zinc-800 border border-white/10 text-white px-4 py-2 rounded-xl text-xs focus:ring-2 focus:ring-pink-500 outline-none"
+              className={`${themeInput} text-xs font-bold px-4 py-2 rounded-lg focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all`}
               aria-label="Filter by Date"
-              title="Filter matches by date"
             />
-            {selectedDate && (
-              <button onClick={() => setSelectedDate("")} className="text-xs text-red-400 font-bold hover:underline">
-                Clear
-              </button>
-            )}
+          </div>
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search matches..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className={`pl-9 pr-4 py-2 ${themeInput} rounded-lg text-xs font-bold focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all w-48 sm:w-64`}
+            />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${themeTextMoreMuted}`}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
           </div>
         </div>
-      </nav>
-
-      <div className="relative max-w-md mx-auto mb-10">
-        <input
-          type="text"
-          placeholder="Search matches (team, venue, etc)..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-12 pr-10 py-3 bg-zinc-900/50 border border-white/10 rounded-2xl text-sm focus:ring-2 focus:ring-pink-500 outline-none transition-all"
-        />
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500">
-          <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
-        </svg>
-        {searchTerm && (
-          <HiOutlineX onClick={() => setSearchTerm("")} className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 cursor-pointer hover:text-white" />
-        )}
       </div>
 
-      <div className="overflow-hidden bg-zinc-900/30 border border-white/5 rounded-3xl shadow-2xl">
-        <table className="min-w-full">
+      <div className={`mb-8 flex flex-wrap gap-1.5 border-b ${isDark ? 'border-white/5' : 'border-black/5'} pb-4`}>
+        {tournaments.map((t) => (
+          <button
+            key={t._id}
+            onClick={() => setSelectedTournamentId(t._id)}
+            className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${
+              selectedTournamentId === t._id
+                ? (isDark ? "bg-white text-black" : "bg-black text-white")
+                : `${themeTextMuted} hover:text-inherit hover:bg-black/5 dark:hover:bg-white/5`
+            }`}
+          >
+            {t.name}
+          </button>
+        ))}
+      </div>
+
+      <div className={`border ${isDark ? 'border-white/10' : 'border-black/5'} rounded-xl overflow-hidden shadow-sm`}>
+        <table className={`min-w-full divide-y ${isDark ? 'divide-white/5' : 'divide-black/5'}`}>
           <thead>
-            <tr className="bg-zinc-900/80 text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-black">
-              <th className="px-6 py-4 text-left">Match</th>
-              <th className="px-6 py-4 text-left">Date</th>
-              <th className="px-6 py-4 text-left">Venue</th>
+            <tr className={`${isDark ? 'bg-white/5' : 'bg-black/[0.02]'} text-[10px] uppercase tracking-widest ${themeTextMoreMuted} font-black`}>
+              <th className="px-6 py-4 text-left">Match Details</th>
+              <th className="px-6 py-4 text-left">Date & Venue</th>
               <th className="px-6 py-4 text-left">Status</th>
-              <th className="px-6 py-4 text-right">Actions</th>
+              <th className="px-6 py-4 text-right">Control</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-white/5">
+          <tbody className={`divide-y ${isDark ? 'divide-white/5' : 'divide-black/5'} ${isDark ? 'bg-transparent' : 'bg-white'}`}>
             {sortedFixtures.map((fix) => {
               const statusInfo = liveMatches[fix._id];
               const status = statusInfo?.status || "not_started";
               
               return (
-                <tr key={fix._id} className="hover:bg-white/5 transition-colors group">
+                <tr key={fix._id} className={`${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.01]'} transition-colors group`}>
                   <td className="px-6 py-5">
                     <div className="flex flex-col text-sm font-bold">
-                      <span className="flex items-center gap-2">
-                        {fix.teamA} {status === "ended" && statusInfo?.resultA === "win" && "🏆"}
-                      </span>
-                      <span className="text-[10px] text-pink-500/50 my-1">VS</span>
-                      <span className="flex items-center gap-2">
-                        {fix.teamB} {status === "ended" && statusInfo?.resultB === "win" && "🏆"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={status === "ended" && statusInfo?.resultA === "win" ? "text-inherit" : themeTextMuted}>{fix.teamA}</span>
+                        {status === "ended" && statusInfo?.resultA === "win" && <div className={`w-1.5 h-1.5 ${isDark ? 'bg-white' : 'bg-black'} rounded-full`}></div>}
+                      </div>
+                      <div className={`text-[10px] ${themeTextMoreMuted} my-0.5`}>vs</div>
+                      <div className="flex items-center gap-2">
+                        <span className={status === "ended" && statusInfo?.resultB === "win" ? "text-inherit" : themeTextMuted}>{fix.teamB}</span>
+                        {status === "ended" && statusInfo?.resultB === "win" && <div className={`w-1.5 h-1.5 ${isDark ? 'bg-white' : 'bg-black'} rounded-full`}></div>}
+                      </div>
                     </div>
                   </td>
-                  <td className="px-6 py-5 text-xs text-zinc-400">
-                    {new Date(fix.matchDate).toLocaleDateString()}
-                    <br/>
-                    <span className="text-[10px] opacity-50">{new Date(fix.matchDate).toLocaleTimeString()}</span>
-                  </td>
-                  <td className="px-6 py-5 text-xs text-zinc-400 italic">
-                    {fix.venue || "N/A"}
+                  <td className="px-6 py-5">
+                    <div className="text-xs font-bold">{new Date(fix.matchDate).toLocaleDateString()}</div>
+                    <div className={`text-[10px] ${themeTextMuted} font-medium`}>{new Date(fix.matchDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} • {fix.venue || "No Venue"}</div>
                   </td>
                   <td className="px-6 py-5">
                     {status === "live" ? (
-                      <span className="flex items-center gap-2 text-[10px] font-black text-green-400 uppercase animate-pulse">
-                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                        LIVE ({formatElapsedTime(statusInfo?.startedAt)})
+                      <span className={`inline-flex items-center gap-1.5 text-[10px] font-black uppercase border ${isDark ? 'border-white text-white' : 'border-black text-black'} px-2 py-0.5 rounded-md`}>
+                        <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                        Live {formatElapsedTime(statusInfo?.startedAt)}
                       </span>
+                    ) : status === "paused" ? (
+                      <span className={`text-[10px] font-black ${themeTextMuted} uppercase border ${isDark ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/5'} px-2 py-0.5 rounded-md`}>Half Time</span>
                     ) : status === "ended" ? (
-                      <span className="text-[10px] font-black text-zinc-500 uppercase border border-white/10 px-2 py-0.5 rounded-full">Ended</span>
+                      <span className={`text-[10px] font-black ${themeTextMuted} uppercase border ${isDark ? 'border-white/10' : 'border-black/10'} px-2 py-0.5 rounded-md`}>Finished</span>
                     ) : (
-                      <span className="text-[10px] font-black text-pink-500/50 uppercase border border-pink-500/10 px-2 py-0.5 rounded-full">Scheduled</span>
+                      <span className={`text-[10px] font-black ${themeTextMoreMuted} uppercase tracking-tight`}>Scheduled</span>
                     )}
                   </td>
                   <td className="px-6 py-5 text-right">
-                    <div className="flex flex-col gap-2 items-end">
+                    <div className="flex flex-col gap-1.5 items-end">
                       <Link
                         href={`/admin/update-live/${fix._id}`}
-                        className="px-4 py-1.5 bg-pink-600 hover:bg-pink-700 text-white rounded-xl text-[11px] font-bold transition-all shadow-lg shadow-pink-600/10"
+                        className={`px-3 py-1 ${isDark ? 'bg-white text-black hover:bg-white/80' : 'bg-black text-white hover:bg-black/80'} rounded text-[10px] font-bold transition-all`}
                       >
-                        Update Details
+                        Edit Match
                       </Link>
 
-                      {status === "live" && (
-                        <>
-                          <button onClick={() => handlePauseMatch(fix._id)} className="text-[10px] font-bold text-yellow-500 hover:underline">Pause (HT)</button>
-                          <button onClick={() => handleEndMatch(fix._id)} className="text-[10px] font-bold text-red-500 hover:underline">End Match</button>
-                        </>
-                      )}
-
-                      {status === "paused" && (
-                        <button onClick={() => handleResumeMatch(fix._id)} className="text-[10px] font-bold text-green-500 hover:underline">Resume (2H)</button>
-                      )}
-
-                      {status === "not_started" && (
-                        <button onClick={() => handleStartLive(fix)} className="text-[11px] font-bold text-green-500 border border-green-500/20 px-3 py-1 rounded-lg hover:bg-green-500 hover:text-black transition-all">Start Live</button>
-                      )}
+                      <div className="flex gap-2">
+                        {status === "live" && (
+                          <>
+                            <button onClick={() => handlePauseMatch(fix._id)} className={`text-[10px] font-bold ${themeTextMuted} hover:text-inherit`}>Pause</button>
+                            <button onClick={() => handleEndMatch(fix._id)} className="text-[10px] font-bold text-red-500 hover:text-red-700">End</button>
+                          </>
+                        )}
+                        {status === "paused" && (
+                          <button onClick={() => handleResumeMatch(fix._id)} className="text-[10px] font-bold text-inherit hover:underline">Resume</button>
+                        )}
+                        {status === "not_started" && (
+                          <button onClick={() => handleStartLive(fix)} className="text-[10px] font-bold text-inherit hover:underline">Start Live</button>
+                        )}
+                      </div>
                     </div>
                   </td>
                 </tr>
