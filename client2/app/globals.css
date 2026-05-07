@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+@import "daisyui";
+
+:root {
+  --background: #000000;
+  --foreground: #ffffff;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Poppins', sans-serif;
+  scroll-behavior: smooth;
+  min-height: 100vh;
+}
+
+::selection {
+  background-color: rgb(235, 15, 198);
+  color: white;
+}
+
+.input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  background-color: rgb(201, 22, 96);
+  border-radius: 50%;
+}
+
+/* Custom scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 20px;
+}

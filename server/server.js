@@ -23,7 +23,8 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'https://footimes.com',
   'https://www.footimes.com',
-  'http://localhost:5173'
+  'http://localhost:5173',
+  'http://localhost:3000'
 ];
 
 /* ------------ Socket.IO AFTER server ------------ */
