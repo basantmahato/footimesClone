@@ -13,6 +13,10 @@ const liveMatchSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
+  tournamentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Tournament',
+  },
   tournamentName: String,
 
   teamA: String,

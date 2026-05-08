@@ -69,7 +69,7 @@ export default function TournamentDetailsClient({ id, initialInfo }: Props) {
         const [fixturesRes, liveScoresRes, standingsRes] = await Promise.all([
           axios.get(`https://api.footimes.com/api/fixtures?tournament=${id}`),
           axios.get(`https://api.footimes.com/api/livescore/all`),
-          axios.get(`https://api.footimes.com/api/livescore/standings/${initialInfo.name}`)
+          axios.get(`https://api.footimes.com/api/livescore/standings/${id}`)
         ]);
 
         setAllFixtures(fixturesRes.data);

@@ -45,11 +45,21 @@ router.patch('/:fixtureId/status', async (req, res) => {
         fixtureId,
         teamA: fixture.teamA,
         teamB: fixture.teamB,
+        tournamentId: fixture.tournament?._id || fixture.tournament,
         tournamentName: fixture.tournament?.name || 'Unknown',
         status: status === 'reset' ? 'not_started' : status,
         startedAt: startedAt || (status === 'live' ? new Date() : null),
       });
       await updated.save();
+    } else if (status === 'live' || status === 'ended') {
+      // If updating status, ensure tournamentId is set if missing
+      if (!updated.tournamentId) {
+        const fixture = await Fixture.findById(fixtureId);
+        if (fixture) {
+          updated.tournamentId = fixture.tournament;
+          await updated.save();
+        }
+      }
     }
 
     const io = req.app.get('io');
@@ -72,10 +82,10 @@ router.patch('/:fixtureId/status', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const {
-  fixtureId, teamA, teamB, tournamentName,
-  scoreA = 0, scoreB = 0, startedAt,
-  resultA, resultB
-} = req.body;
+      fixtureId, teamA, teamB, tournamentName, tournamentId,
+      scoreA = 0, scoreB = 0, startedAt,
+      resultA, resultB
+    } = req.body;
 
     if (!fixtureId) {
       return res.status(400).json({ error: 'fixtureId is required' });
@@ -84,17 +94,18 @@ router.post('/', async (req, res) => {
     const match = await LiveMatch.findOneAndUpdate(
       { fixtureId },
       {
-  fixtureId,
-  teamA,
-  teamB,
-  tournamentName,
-  scoreA,
-  scoreB,
-  resultA,
-  resultB,
-  startedAt,
-  status: 'not_started',
-},
+        fixtureId,
+        teamA,
+        teamB,
+        tournamentId,
+        tournamentName,
+        scoreA,
+        scoreB,
+        resultA,
+        resultB,
+        startedAt,
+        status: 'not_started',
+      },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
@@ -187,14 +198,21 @@ router.delete('/:fixtureId', async (req, res) => {
 
 
 
-// GET /api/livescore/standings/:tournamentName
-router.get('/standings/:tournamentName', async (req, res) => {
+// GET /api/livescore/standings/:tournamentIdentifier
+router.get('/standings/:tournamentIdentifier', async (req, res) => {
   try {
-    const { tournamentName } = req.params;
-    const endedMatches = await LiveMatch.find({
-      tournamentName: tournamentName,
-      status: 'ended'
-    });
+    const { tournamentIdentifier } = req.params;
+    
+    let query = { status: 'ended' };
+    
+    // Check if tournamentIdentifier is a valid ObjectId
+    if (mongoose.Types.ObjectId.isValid(tournamentIdentifier)) {
+      query.tournamentId = tournamentIdentifier;
+    } else {
+      query.tournamentName = { $regex: new RegExp(`^${tournamentIdentifier}$`, 'i') };
+    }
+
+    const endedMatches = await LiveMatch.find(query);
 
     const standingsMap = {};
 
