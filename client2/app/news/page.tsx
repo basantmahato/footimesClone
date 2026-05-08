@@ -58,7 +58,7 @@ const NewsPage = () => {
 
   return (
     <div className="bg-black min-h-screen text-white pb-20">
-      <nav className="sticky top-[50px] z-40 bg-black/95 backdrop-blur-md overflow-x-auto border-b border-zinc-800 px-4 py-4 mb-6 scrollbar-hide">
+      <nav className="sticky top-14 z-40 bg-black/95 backdrop-blur-md overflow-x-auto border-b border-zinc-800 px-4 py-3 mb-6 scrollbar-hide">
         <ul className="flex items-center gap-3 whitespace-nowrap">
           {tabs.map((tab) => (
             <li

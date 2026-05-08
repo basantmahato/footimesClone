@@ -11,6 +11,7 @@ import newsRoutes from './routes/newsRoutes.js';
 import tournamentRoutes from './routes/tournamentRoutes.js';
 import fixtureRoutes from './routes/fixtureRoutes.js';
 import livescoreRoutes from './routes/livescore.js';
+import leadRoutes from './routes/leadRoutes.js';
 
 /* ------------ Config ------------ */
 dotenv.config();
@@ -63,6 +64,7 @@ app.use('/api/news', newsRoutes);
 app.use('/api/livescore', livescoreRoutes);
 app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/fixtures', fixtureRoutes);
+app.use('/api/leads', leadRoutes);
 
 /* ------------ Socket Events ------------ */
 io.on('connection', socket => {

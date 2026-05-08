@@ -59,7 +59,7 @@ export default function TournamentPage() {
   }
 
   return (
-    <div className="p-4 text-white bg-[#121212] min-h-screen">
+    <div className="px-4 pb-20 pt-0 text-white bg-[#121212] min-h-screen">
       <div className="mb-6">
         <input
           type="text"

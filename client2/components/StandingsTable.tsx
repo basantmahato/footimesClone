@@ -30,12 +30,12 @@ const StandingsTable: React.FC<Props> = ({ standings }) => {
             <tr className="bg-white/5 text-[10px] uppercase tracking-widest font-bold text-gray-400">
               <th className="px-4 py-4 text-center w-12">Pos</th>
               <th className="px-4 py-4">Team</th>
-              <th className="px-2 py-4 text-center">P</th>
-              <th className="px-2 py-4 text-center">W</th>
-              <th className="px-2 py-4 text-center">D</th>
-              <th className="px-2 py-4 text-center">L</th>
-              <th className="px-2 py-4 text-center hidden sm:table-cell">GD</th>
-              <th className="px-4 py-4 text-center text-pink-500">Pts</th>
+              <th className="px-2 py-4 text-center">Played</th>
+              <th className="px-2 py-4 text-center">Won</th>
+              <th className="px-2 py-4 text-center">Drawn</th>
+              <th className="px-2 py-4 text-center">Lost</th>
+              <th className="px-2 py-4 text-center hidden sm:table-cell">Goal Difference</th>
+              <th className="px-4 py-4 text-center text-pink-500">Points</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-white/5">

@@ -215,14 +215,14 @@ export default function AdminLiveUpdatePage() {
           <div key={`${field}-${i}`} className="flex gap-2 animate-in fade-in slide-in-from-right-1 duration-200">
             <input
               placeholder="Player Name"
-              value={player.name}
+              value={player.name || ""}
               onChange={(e) => updateArray(field, i, "name", e.target.value)}
               className={`flex-[2] ${themeInput} rounded-lg px-3 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-black dark:focus:ring-white`}
             />
             <input
               placeholder="#"
               type="number"
-              value={player.number}
+              value={player.number || ""}
               onChange={(e) => updateArray(field, i, "number", e.target.value)}
               className={`w-14 ${themeInput} rounded-lg px-3 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-black dark:focus:ring-white`}
             />

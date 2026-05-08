@@ -35,7 +35,7 @@ const DateScroller = ({ matchDates = [], selectedDate, onSelectDate }: DateScrol
   }, [selectedDate, matchDates]);
 
   return (
-    <div className="flex items-center fixed top-[50px] left-0 right-0 z-[9] bg-[#0f0f0f] p-2 text-white overflow-hidden">
+    <div className="flex items-center fixed top-14 left-0 right-0 z-[9] bg-[#0f0f0f] p-2 text-white overflow-hidden">
       <button
         onClick={scrollLeft}
         className="p-2 opacity-70 hover:opacity-100 transition"

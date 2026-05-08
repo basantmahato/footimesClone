@@ -23,7 +23,7 @@ export default function Navbar() {
   };
 
   return (
-    <div className="bg-black text-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 w-full">
+    <div className="bg-black text-white px-4 h-14 flex items-center justify-between sticky top-0 z-50 w-full border-b border-white/5">
       {/* Logo + Red Dot */}
       <div className="flex items-center space-x-1">
         <Link href="/" className="font-semibold text-lg flex items-center">

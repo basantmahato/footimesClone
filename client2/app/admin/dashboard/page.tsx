@@ -9,7 +9,8 @@ import {
   FaBars,
   FaSignOutAlt,
   FaMoon,
-  FaSun
+  FaSun,
+  FaEnvelope
 } from "react-icons/fa";
 import { GoChevronLeft } from "react-icons/go";
 import { useRouter } from "next/navigation";
@@ -20,6 +21,7 @@ import AdminMatchesPage from "@/components/admin/AdminMatchesPage";
 import AdminAddFixture from "@/components/admin/AdminAddFixture";
 import AdminTournamentPage from "@/components/admin/AdminTournamentPage";
 import AdminNewsForm from "@/components/admin/AdminNewsForm";
+import AdminLeadsPage from "@/components/admin/AdminLeadsPage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAdminTheme } from "@/components/admin/AdminThemeContext";
 
@@ -51,6 +53,7 @@ export default function AdminDashboardPage() {
     { key: "fixture", icon: FaCalendarAlt, label: "Fixtures" },
     { key: "tournament", icon: FaTrophy, label: "Tournaments" },
     { key: "news", icon: FaNewspaper, label: "News" },
+    { key: "leads", icon: FaEnvelope, label: "Leads" },
   ];
 
   const handleLogout = () => {
@@ -237,6 +240,7 @@ export default function AdminDashboardPage() {
                     {activeSection === "fixture" && <AdminAddFixture />}
                     {activeSection === "tournament" && <AdminTournamentPage />}
                     {activeSection === "news" && <AdminNewsForm />}
+                    {activeSection === "leads" && <AdminLeadsPage />}
                  </div>
               </div>
             )}
