@@ -13,10 +13,12 @@ interface Tournament {
   name: string;
   logo?: string;
   location?: string;
+  status?: 'past' | 'current' | 'upcoming';
 }
 
 export default function TournamentPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeFilter, setActiveFilter] = useState("all");
   const [allTournaments, setAllTournaments] = useState<Tournament[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,9 +39,12 @@ export default function TournamentPage() {
     fetchTournaments();
   }, []);
 
-  const filteredTournaments = allTournaments.filter((tourn) =>
-    tourn.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredTournaments = allTournaments.filter((tourn) => {
+    const matchesSearch = tourn.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const tournStatus = tourn.status || "current"; // Default to current for legacy data
+    const matchesFilter = activeFilter === "all" || tournStatus === activeFilter;
+    return matchesSearch && matchesFilter;
+  });
 
   if (loading) {
     return (
@@ -55,15 +60,36 @@ export default function TournamentPage() {
 
   return (
     <div className="p-4 text-white bg-[#121212] min-h-screen">
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        placeholder="Search The Tournament..."
-        className="w-full p-3 rounded-xl bg-gray-800 text-[15px] text-white mb-6 border border-white/5 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all"
-      />
+      <div className="mb-6">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Search The Tournament..."
+          className="w-full p-3 rounded-xl bg-gray-800 text-[15px] text-white mb-4 border border-white/5 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all shadow-lg"
+        />
 
-      <h2 className="text-sm font-bold text-pink-500 mb-4 uppercase tracking-wider">All Tournaments</h2>
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {["all", "current", "upcoming", "past"].map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-300 ${
+                activeFilter === filter
+                  ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20 scale-105"
+                  : "bg-white/5 text-gray-500 hover:bg-white/10"
+              }`}
+            >
+              {filter}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <h2 className="text-sm font-bold text-pink-500 mb-6 uppercase tracking-wider flex items-center gap-2">
+        <span>{activeFilter === 'all' ? 'All Tournaments' : `${activeFilter} Tournaments`}</span>
+        <span className="h-px flex-1 bg-white/5"></span>
+      </h2>
       {filteredTournaments.length > 0 ? (
         <ul className="space-y-4">
           {filteredTournaments.map((tourn) => (

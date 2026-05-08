@@ -65,22 +65,87 @@ export default function TournamentDetailsClient({ id, initialInfo }: Props) {
 
   useEffect(() => {
     const fetchTournamentData = async () => {
+      // Helper to escape regex special characters in name
+      const escapeRegex = (str: string) => str.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+      
       try {
-        const [fixturesRes, liveScoresRes, standingsRes] = await Promise.all([
+        const results = await Promise.allSettled([
           axios.get(`https://api.footimes.com/api/fixtures?tournament=${id}`),
           axios.get(`https://api.footimes.com/api/livescore/all`),
-          axios.get(`https://api.footimes.com/api/livescore/standings/${id}`)
+          axios.get(`https://api.footimes.com/api/livescore/standings/${encodeURIComponent(escapeRegex(initialInfo.name))}`)
         ]);
 
-        setAllFixtures(fixturesRes.data);
-        const tournamentLiveScores = liveScoresRes.data.filter(
-          (ls: LiveScore) => ls.tournamentName === initialInfo.name
-        );
-        setAllLiveScores(tournamentLiveScores);
-        setStandings(standingsRes.data);
+        if (results[0].status === 'fulfilled') {
+          setAllFixtures(results[0].value.data);
+        } else {
+          console.error("Failed to fetch fixtures:", results[0].reason);
+        }
+
+        if (results[1].status === 'fulfilled') {
+          const data = results[1].value.data;
+          const tournamentLiveScores = Array.isArray(data) 
+            ? data.filter((ls: LiveScore) => ls.tournamentName === initialInfo.name)
+            : [];
+          setAllLiveScores(tournamentLiveScores);
+        } else {
+          console.error("Failed to fetch live scores:", results[1].reason);
+        }
+
+        if (results[2].status === 'fulfilled') {
+          setStandings(results[2].value.data);
+        } else {
+          console.warn("Failed to fetch standings from API, using frontend calculation:", results[2].reason);
+          // Fallback: Calculate standings from live scores if API fails
+          if (results[1].status === 'fulfilled') {
+            const endedMatches = results[1].value.data.filter(
+              (ls: any) => ls.status === 'ended' && ls.tournamentName === initialInfo.name
+            );
+            
+            const standingsMap: Record<string, TeamStats> = {};
+            endedMatches.forEach((match: any) => {
+              const { teamA, teamB, scoreA, scoreB } = match;
+              [teamA, teamB].forEach(team => {
+                if (!standingsMap[team]) {
+                  standingsMap[team] = { team, mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
+                }
+              });
+
+              standingsMap[teamA].mp += 1;
+              standingsMap[teamB].mp += 1;
+              standingsMap[teamA].gf += scoreA;
+              standingsMap[teamA].ga += scoreB;
+              standingsMap[teamB].gf += scoreB;
+              standingsMap[teamB].ga += scoreA;
+              standingsMap[teamA].gd = standingsMap[teamA].gf - standingsMap[teamA].ga;
+              standingsMap[teamB].gd = standingsMap[teamB].gf - standingsMap[teamB].ga;
+
+              if (scoreA > scoreB) {
+                standingsMap[teamA].w += 1;
+                standingsMap[teamA].pts += 3;
+                standingsMap[teamB].l += 1;
+              } else if (scoreB > scoreA) {
+                standingsMap[teamB].w += 1;
+                standingsMap[teamB].pts += 3;
+                standingsMap[teamA].l += 1;
+              } else {
+                standingsMap[teamA].d += 1;
+                standingsMap[teamA].pts += 1;
+                standingsMap[teamB].d += 1;
+                standingsMap[teamB].pts += 1;
+              }
+            });
+
+            const calculatedStandings = Object.values(standingsMap).sort((a, b) => {
+              if (b.pts !== a.pts) return b.pts - a.pts;
+              if (b.gd !== a.gd) return b.gd - a.gd;
+              return b.gf - a.gf;
+            });
+            setStandings(calculatedStandings);
+          }
+        }
       } catch (err) {
-        console.error("Failed to fetch tournament details:", err);
-        setError("Failed to load tournament data. Please try again later.");
+        console.error("Unexpected error fetching tournament details:", err);
+        setError("An unexpected error occurred.");
       } finally {
         setLoading(false);
       }

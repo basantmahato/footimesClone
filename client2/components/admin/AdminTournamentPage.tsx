@@ -8,6 +8,7 @@ interface Tournament {
   _id: string;
   name: string;
   location: string;
+  status: 'past' | 'current' | 'upcoming';
 }
 
 const AdminTournamentPage = () => {
@@ -15,7 +16,7 @@ const AdminTournamentPage = () => {
   const isDark = theme === 'dark';
 
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
-  const [form, setForm] = useState({ name: "", location: "" });
+  const [form, setForm] = useState({ name: "", location: "", status: "current" });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -36,7 +37,7 @@ const AdminTournamentPage = () => {
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -60,7 +61,7 @@ const AdminTournamentPage = () => {
   };
 
   const handleEdit = (t: Tournament) => {
-    setForm({ name: t.name, location: t.location });
+    setForm({ name: t.name, location: t.location, status: t.status || "current" });
     setEditingId(t._id);
     setShowForm(true);
   };
@@ -77,7 +78,7 @@ const AdminTournamentPage = () => {
   };
 
   const resetForm = () => {
-    setForm({ name: "", location: "" });
+    setForm({ name: "", location: "", status: "current" });
     setEditingId(null);
   };
 
@@ -120,6 +121,7 @@ const AdminTournamentPage = () => {
                     <tr className={`${isDark ? 'bg-white/5' : 'bg-black/[0.02]'} text-[10px] uppercase tracking-widest ${themeTextMoreMuted} font-black`}>
                       <th className="px-6 py-4 text-left">Tournament Name</th>
                       <th className="px-6 py-4 text-left">Location</th>
+                      <th className="px-6 py-4 text-left">Status</th>
                       <th className="px-6 py-4 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -128,6 +130,15 @@ const AdminTournamentPage = () => {
                       <tr key={t._id} className={`${isDark ? 'hover:bg-white/[0.02]' : 'hover:bg-black/[0.01]'} transition-colors`}>
                         <td className="px-6 py-4 font-bold text-sm">{t.name}</td>
                         <td className={`px-6 py-4 ${themeTextMuted} text-xs font-medium`}>{t.location}</td>
+                        <td className="px-6 py-4">
+                          <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-md ${
+                            t.status === 'past' ? 'bg-red-500/10 text-red-500' :
+                            t.status === 'upcoming' ? 'bg-blue-500/10 text-blue-500' :
+                            'bg-green-500/10 text-green-500'
+                          }`}>
+                            {t.status || 'current'}
+                          </span>
+                        </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-4">
                             <button
@@ -159,8 +170,9 @@ const AdminTournamentPage = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Tournament Name</label>
+                  <label htmlFor="tournament-name" className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Tournament Name</label>
                   <input
+                    id="tournament-name"
                     name="name"
                     placeholder="e.g. Champions League"
                     value={form.name}
@@ -170,8 +182,9 @@ const AdminTournamentPage = () => {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Location</label>
+                  <label htmlFor="tournament-location" className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Location</label>
                   <input
+                    id="tournament-location"
                     name="location"
                     placeholder="e.g. Europe"
                     value={form.location}
@@ -179,6 +192,20 @@ const AdminTournamentPage = () => {
                     required
                     className={`w-full ${themeInput} rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-1 focus:ring-black dark:focus:ring-white outline-none`}
                   />
+                </div>
+                <div className="space-y-1.5">
+                  <label htmlFor="tournament-status" className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Status</label>
+                  <select
+                    id="tournament-status"
+                    name="status"
+                    value={form.status}
+                    onChange={handleChange}
+                    className={`w-full ${themeInput} rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-1 focus:ring-black dark:focus:ring-white outline-none appearance-none`}
+                  >
+                    <option value="current">Current</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                  </select>
                 </div>
               </div>
               <div className="flex gap-4 pt-4">
