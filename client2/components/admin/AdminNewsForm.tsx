@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
 import { useAdminTheme } from "./AdminThemeContext";
+import { Plus } from "lucide-react";
+import { toast } from "react-toastify";
 
 interface NewsItem {
   _id: string;
@@ -11,10 +13,16 @@ interface NewsItem {
   description: string;
   thumbnail: string;
   tournament?: { _id: string, name: string };
+  category?: { _id: string, name: string };
   createdAt: string;
 }
 
 interface Tournament {
+  _id: string;
+  name: string;
+}
+
+interface Category {
   _id: string;
   name: string;
 }
@@ -26,7 +34,9 @@ export default function AdminNewsForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [tournaments, setTournaments] = useState<Tournament[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [selectedTournament, setSelectedTournament] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
   const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
   const [newsList, setNewsList] = useState<NewsItem[]>([]);
@@ -34,13 +44,27 @@ export default function AdminNewsForm() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileError, setFileError] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
 
   useEffect(() => {
-    axios.get("https://api.footimes.com/api/news/tournaments")
-      .then((res) => setTournaments(res.data))
-      .catch((err) => console.error("Failed to load tournaments:", err));
+    fetchData();
     fetchNews();
   }, []);
+
+  const fetchData = async () => {
+    try {
+      const [tournsRes, catsRes] = await Promise.all([
+        axios.get("https://api.footimes.com/api/news/tournaments"),
+        axios.get("https://api.footimes.com/api/categories")
+      ]);
+      setTournaments(tournsRes.data);
+      setCategories(catsRes.data);
+    } catch (err) {
+      console.error("Failed to load data:", err);
+    }
+  };
 
   useEffect(() => {
     if (thumbnailFile) {
@@ -93,10 +117,24 @@ export default function AdminNewsForm() {
     }
   };
 
+  const handleQuickAddCategory = async () => {
+    if (!newCategoryName) return;
+    try {
+      const res = await axios.post("https://api.footimes.com/api/categories", { name: newCategoryName });
+      setCategories([...categories, res.data]);
+      setSelectedCategory(res.data._id);
+      setNewCategoryName("");
+      setShowAddCategory(false);
+      toast.success("Category added!");
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Failed to add category");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !description || !selectedTournament) {
-      alert("Please fill in all fields.");
+    if (!title || !description) {
+      toast.error("Title and description are required.");
       return;
     }
 
@@ -106,12 +144,12 @@ export default function AdminNewsForm() {
       try {
         currentThumbnail = await uploadToCloudinary(thumbnailFile);
       } catch (err: any) {
-        alert(err.message);
+        toast.error(err.message);
         setLoading(false);
         return;
       }
     } else if (!thumbnailUrl && !editId) {
-      alert("Please upload a thumbnail image.");
+      toast.error("Please upload a thumbnail image.");
       setLoading(false);
       return;
     }
@@ -119,22 +157,23 @@ export default function AdminNewsForm() {
     const payload = {
       title,
       description,
-      tournamentId: selectedTournament,
+      tournamentId: selectedTournament || null,
+      categoryId: selectedCategory || null,
       thumbnail: currentThumbnail,
     };
 
     try {
       if (editId) {
         await axios.put(`https://api.footimes.com/api/news/${editId}`, payload);
-        alert("News updated successfully");
+        toast.success("News updated successfully");
       } else {
         await axios.post("https://api.footimes.com/api/news", payload);
-        alert("News posted successfully");
+        toast.success("News posted successfully");
       }
       resetForm();
       fetchNews();
     } catch (error) {
-      alert("Submission failed!");
+      toast.error("Submission failed!");
     } finally {
       setLoading(false);
     }
@@ -145,19 +184,21 @@ export default function AdminNewsForm() {
     setTitle(item.title);
     setDescription(item.description);
     setSelectedTournament(item.tournament?._id || "");
+    setSelectedCategory(item.category?._id || "");
     setThumbnailUrl(item.thumbnail || null);
     setThumbnailFile(null);
     setFileError("");
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this news item?")) {
       try {
         await axios.delete(`https://api.footimes.com/api/news/${id}`);
-        alert("News deleted");
+        toast.success("News deleted");
         fetchNews();
       } catch (error) {
-        alert("Delete failed!");
+        toast.error("Delete failed!");
       }
     }
   };
@@ -167,6 +208,7 @@ export default function AdminNewsForm() {
     setTitle("");
     setDescription("");
     setSelectedTournament("");
+    setSelectedCategory("");
     setThumbnailFile(null);
     setThumbnailUrl(null);
     setPreviewUrl(null);
@@ -187,20 +229,21 @@ export default function AdminNewsForm() {
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-1 space-y-6">
             <div className="space-y-1.5">
-              <label className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Thumbnail Image</label>
-              <div className={`relative aspect-square border ${isDark ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/[0.02]'} rounded-2xl overflow-hidden group hover:border-inherit transition-all`}>
+              <label htmlFor="thumbnail-upload" className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Thumbnail Image</label>
+              <div className={`relative aspect-square border ${isDark ? 'border-white/10 bg-white/5' : 'border-black/10 bg-black/[0.02]'} rounded-2xl overflow-hidden group hover:border-inherit transition-all shadow-inner`}>
                 <input
+                  id="thumbnail-upload"
                   type="file"
                   accept="image/*"
                   onChange={handleThumbnailChange}
                   className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                  aria-label="Upload news thumbnail"
-                  title="Upload news thumbnail"
+                  aria-label="Upload thumbnail image"
+                  title="Upload thumbnail image"
                 />
                 {previewUrl || thumbnailUrl ? (
                   <div className="relative w-full h-full">
                     <Image src={previewUrl || thumbnailUrl!} alt="Preview" fill className="object-cover" />
-                    <div className={`absolute inset-0 ${isDark ? 'bg-black/60' : 'bg-white/40'} flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity`}>
+                    <div className={`absolute inset-0 ${isDark ? 'bg-black/60' : 'bg-white/40'} flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]`}>
                       <span className={`text-[10px] font-black uppercase tracking-widest ${isDark ? 'text-white' : 'text-black'}`}>Change Image</span>
                     </div>
                   </div>
@@ -220,43 +263,103 @@ export default function AdminNewsForm() {
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Article Title</label>
+                <label htmlFor="article-title" className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Article Title</label>
                 <input
+                  id="article-title"
                   type="text"
                   placeholder="Enter news title..."
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${themeInput} focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all font-bold text-sm`}
+                  className={`w-full px-4 py-3 rounded-lg border ${themeInput} focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all font-bold text-sm shadow-sm`}
                   required
+                  title="Enter the title of the news article"
+                  aria-label="Article Title"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Content</label>
+                <label htmlFor="article-content" className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Content</label>
                 <textarea
+                  id="article-content"
                   placeholder="Enter detailed description..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${themeInput} focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all min-h-[180px] resize-none text-sm leading-relaxed`}
+                  className={`w-full px-4 py-3 rounded-lg border ${themeInput} focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all min-h-[150px] resize-none text-sm leading-relaxed shadow-sm`}
                   required
+                  title="Enter the main content of the news article"
+                  aria-label="Article Content"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Category / Tournament</label>
-                <select
-                  value={selectedTournament}
-                  onChange={(e) => setSelectedTournament(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-lg border ${themeInput} focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all text-sm font-bold`}
-                  title="Select News Category"
-                  required
-                  aria-label="Select News Category or Tournament"
-                >
-                  <option value="">Select Category</option>
-                  {tournaments.map((t) => (
-                    <option key={t._id} value={t._id}>{t.name}</option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="tournament-select" className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Tournament (Optional)</label>
+                  <select
+                    id="tournament-select"
+                    value={selectedTournament}
+                    onChange={(e) => setSelectedTournament(e.target.value)}
+                    className={`w-full px-4 py-3 rounded-lg border ${themeInput} focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all text-sm font-bold shadow-sm`}
+                    title="Select a tournament to link this article to"
+                    aria-label="Select Tournament"
+                  >
+                    <option value="">No Tournament</option>
+                    {tournaments.map((t) => (
+                      <option key={t._id} value={t._id}>{t.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <div className="flex justify-between items-center">
+                    <label htmlFor="category-select" className={`text-[10px] font-bold uppercase ${themeLabel} tracking-widest ml-1`}>Category (Optional)</label>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAddCategory(!showAddCategory)}
+                      className="text-pink-500 hover:text-pink-400 transition-colors"
+                      title={showAddCategory ? "Close" : "Add New Category"}
+                      aria-label={showAddCategory ? "Close" : "Add New Category"}
+                    >
+                      <Plus size={14} />
+                    </button>
+                  </div>
+                  {showAddCategory ? (
+                    <div className="flex gap-2 animate-in fade-in zoom-in duration-200">
+                      <input 
+                        id="new-category-name"
+                        type="text" 
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        placeholder="New category..."
+                        className={`flex-1 px-3 py-2 rounded-lg border ${themeInput} text-xs outline-none focus:ring-1 focus:ring-pink-500`}
+                        title="Enter new category name"
+                        aria-label="New Category Name"
+                      />
+                      <button 
+                        type="button"
+                        onClick={handleQuickAddCategory}
+                        className="bg-pink-600 text-white px-3 py-2 rounded-lg text-[10px] font-bold uppercase"
+                        title="Save new category"
+                        aria-label="Save New Category"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  ) : (
+                    <select
+                      id="category-select"
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      className={`w-full px-4 py-3 rounded-lg border ${themeInput} focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all text-sm font-bold shadow-sm`}
+                      title="Select a category for this article"
+                      aria-label="Select Category"
+                    >
+                      <option value="">No Category</option>
+                      {categories.map((c) => (
+                        <option key={c._id} value={c._id}>{c.name}</option>
+                      ))}
+                    </select>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -264,7 +367,9 @@ export default function AdminNewsForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className={`flex-1 ${isDark ? 'bg-white text-black' : 'bg-black text-white'} font-bold text-xs uppercase tracking-widest py-4 rounded-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50`}
+                className={`flex-1 ${isDark ? 'bg-white text-black' : 'bg-black text-white'} font-bold text-xs uppercase tracking-widest py-4 rounded-lg hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-50 shadow-lg`}
+                title={editId ? "Update Article" : "Publish Article"}
+                aria-label={editId ? "Update Article" : "Publish Article"}
               >
                 {loading ? <span className="loading loading-spinner loading-xs"></span> : (editId ? "Update Article" : "Publish Article")}
               </button>
@@ -272,7 +377,9 @@ export default function AdminNewsForm() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className={`px-8 py-4 border ${themeInput} font-bold text-xs uppercase tracking-widest rounded-lg hover:opacity-80 transition-all`}
+                  className={`px-8 py-4 border ${themeInput} font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-all shadow-sm`}
+                  title="Cancel editing"
+                  aria-label="Cancel editing"
                 >
                   Cancel
                 </button>
@@ -282,21 +389,40 @@ export default function AdminNewsForm() {
         </form>
 
         <div className={`mt-20 pt-10 border-t ${themeCardInner}`}>
-          <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] ${themeLabel} mb-8`}>Published Content</h3>
+          <div className="flex justify-between items-center mb-8">
+            <h3 className={`text-[10px] font-black uppercase tracking-[0.3em] ${themeLabel}`}>Published Content</h3>
+            <span className={`text-[10px] ${themeLabel} font-bold`}>{newsList.length} Articles</span>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {newsList.map((item) => (
-              <div key={item._id} className={`border ${themeCardInner} p-4 rounded-xl flex gap-4 group hover:border-inherit transition-all`}>
-                <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 transition-all duration-500">
-                  <Image src={item.thumbnail} alt={item.title} fill className="object-cover" />
+              <div key={item._id} className={`border ${themeCardInner} p-4 rounded-xl flex gap-4 group hover:border-inherit transition-all bg-white/[0.02] hover:bg-white/[0.04] backdrop-blur-sm`}>
+                <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0 transition-all duration-500 shadow-md">
+                  <Image src={item.thumbnail} alt={item.title} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-xs font-bold text-inherit line-clamp-2 mb-1 group-hover:underline">{item.title}</h4>
-                  <p className={`text-[9px] ${themeLabel} font-bold uppercase tracking-wider`}>
-                    {item.tournament?.name || "General"} • {new Date(item.createdAt).toLocaleDateString()}
-                  </p>
-                  <div className="flex gap-3 mt-3">
-                    <button onClick={() => handleEdit(item)} className="text-[9px] font-black text-inherit uppercase hover:underline">Edit</button>
-                    <button onClick={() => handleDelete(item._id)} className="text-[9px] font-black text-red-500 uppercase hover:underline">Delete</button>
+                <div className="flex-1 min-w-0 flex flex-col justify-between">
+                  <div>
+                    <h4 className="text-xs font-bold text-inherit line-clamp-2 mb-1 group-hover:text-pink-500 transition-colors">{item.title}</h4>
+                    <p className={`text-[9px] ${themeLabel} font-bold uppercase tracking-wider`}>
+                      {item.tournament?.name || item.category?.name || "General"} • {new Date(item.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex gap-4 mt-3">
+                    <button 
+                      onClick={() => handleEdit(item)} 
+                      className="text-[9px] font-black text-inherit uppercase hover:text-pink-500 transition-colors"
+                      title="Edit this article"
+                      aria-label="Edit this article"
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(item._id)} 
+                      className="text-[9px] font-black text-red-500 uppercase hover:underline"
+                      title="Delete this article"
+                      aria-label="Delete this article"
+                    >
+                      Delete
+                    </button>
                   </div>
                 </div>
               </div>

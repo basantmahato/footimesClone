@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import News from '../models/News.js';
 import Tournament from '../models/Tournament.js';
+import Category from '../models/Category.js';
 import cloudinary from '../config/cloudinary.js';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 
@@ -25,29 +26,25 @@ const contentStorage = new CloudinaryStorage({
 });
 const uploadContent = multer({ storage: contentStorage });
 
-// ✅ Cloudinary Storage setup for THUMBNAIL images (NEW)
+// ✅ Cloudinary Storage setup for THUMBNAIL images
 const thumbnailStorage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: 'news_thumbnails', // Specific folder for thumbnails
-    allowed_formats: ['jpg', 'jpeg', 'png'], // Common formats for thumbnails
-    transformation: [{ width: 600, height: 400, crop: 'fill' }] // Example transformation for thumbnails
+    folder: 'news_thumbnails',
+    allowed_formats: ['jpg', 'jpeg', 'png'],
+    transformation: [{ width: 600, height: 400, crop: 'fill' }]
   },
 });
 const uploadThumbnail = multer({ storage: thumbnailStorage });
 
-
 /**
  * ✅ POST /api/news/upload-thumbnail
- * New endpoint to upload a single thumbnail image to Cloudinary
- * Expects a file field named 'file' from the frontend
  */
 router.post('/upload-thumbnail', uploadThumbnail.single('file'), async (req, res) => {
   try {
     if (!req.file || !req.file.path) {
       return res.status(400).json({ message: "No thumbnail file provided for upload." });
     }
-    // `req.file.path` contains the Cloudinary URL of the uploaded image
     res.status(200).json({ imageUrl: req.file.path });
   } catch (error) {
     console.error("Error uploading thumbnail image:", error);
@@ -55,36 +52,34 @@ router.post('/upload-thumbnail', uploadThumbnail.single('file'), async (req, res
   }
 });
 
-
 /**
  * ✅ POST /api/news
- * Create new news item from form with thumbnail URL from Cloudinary
- * Expects thumbnail to be a URL in the request body
  */
 router.post('/', async (req, res) => {
   try {
-    const { title, description, tournamentId, thumbnail } = req.body;
+    const { title, description, tournamentId, categoryId, thumbnail } = req.body;
 
-    // ✅ Validate required fields
-    if (!title || !description || !tournamentId || !thumbnail) {
-      return res.status(400).json({ message: 'All fields (title, description, tournamentId, thumbnail URL) are required.' });
+    if (!title || !description || !thumbnail) {
+      return res.status(400).json({ message: 'Title, description, and thumbnail are required.' });
     }
 
-    // ✅ Validate tournamentId format
-    if (!mongoose.Types.ObjectId.isValid(tournamentId)) {
+    if (tournamentId && !mongoose.Types.ObjectId.isValid(tournamentId)) {
       return res.status(400).json({ message: 'Invalid tournament ID format.' });
+    }
+    if (categoryId && !mongoose.Types.ObjectId.isValid(categoryId)) {
+      return res.status(400).json({ message: 'Invalid category ID format.' });
     }
 
     const news = new News({
       title,
       description,
-      tournament: tournamentId,
-      thumbnail // This MUST be the Cloudinary URL obtained from /upload-thumbnail
+      tournament: tournamentId || null,
+      category: categoryId || null,
+      thumbnail
     });
 
     await news.save();
     res.status(201).json({ message: 'News created successfully', news });
-
   } catch (error) {
     console.error("News creation failed:", error);
     res.status(500).json({ message: 'Server error while creating news.', details: error.message });
@@ -93,8 +88,6 @@ router.post('/', async (req, res) => {
 
 /**
  * ✅ POST /api/news/upload-inline-image
- * Upload single editor image to Cloudinary (uses contentStorage)
- * Expects a file field named 'image' from the frontend
  */
 router.post('/upload-inline-image', uploadContent.single('image'), async (req, res) => {
   try {
@@ -110,7 +103,6 @@ router.post('/upload-inline-image', uploadContent.single('image'), async (req, r
 
 /**
  * ✅ GET /api/news/tournaments
- * Load all tournament options
  */
 router.get('/tournaments', async (req, res) => {
   try {
@@ -123,12 +115,24 @@ router.get('/tournaments', async (req, res) => {
 });
 
 /**
+ * ✅ GET /api/news/categories
+ */
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await Category.find();
+    res.json(categories);
+  } catch (error) {
+    console.error("Error fetching categories:", error);
+    res.status(500).json({ error: 'Failed to load categories' });
+  }
+});
+
+/**
  * ✅ GET /api/news
- * Get all news
  */
 router.get('/', async (req, res) => {
   try {
-    const news = await News.find().populate('tournament').sort({ createdAt: -1 });
+    const news = await News.find().populate('tournament').populate('category').sort({ createdAt: -1 });
     res.json(news);
   } catch (error) {
     console.error("Failed to load news:", error);
@@ -138,11 +142,10 @@ router.get('/', async (req, res) => {
 
 /**
  * ✅ GET /api/news/:id
- * Get single news by ID
  */
 router.get('/:id', async (req, res) => {
   try {
-    const news = await News.findById(req.params.id).populate('tournament');
+    const news = await News.findById(req.params.id).populate('tournament').populate('category');
     if (!news) {
       return res.status(404).json({ message: "News not found" });
     }
@@ -155,36 +158,30 @@ router.get('/:id', async (req, res) => {
 
 /**
  * ✅ PUT /api/news/:id
- * Update news item
- * Expects thumbnail to be a URL in the request body (if updating thumbnail)
  */
 router.put('/:id', async (req, res) => {
   try {
-    const { title, description, tournamentId, thumbnail } = req.body;
+    const { title, description, tournamentId, categoryId, thumbnail } = req.body;
 
     const existingNews = await News.findById(req.params.id);
     if (!existingNews) {
       return res.status(404).json({ error: 'News not found' });
     }
 
-    // Basic validation for required fields on update
-    if (!title || !description || !tournamentId || !thumbnail) {
-      return res.status(400).json({ message: 'All fields (title, description, tournamentId, thumbnail URL) are required for update.' });
+    if (!title || !description || !thumbnail) {
+      return res.status(400).json({ message: 'Title, description, and thumbnail are required.' });
     }
 
     existingNews.title = title;
     existingNews.description = description;
-    existingNews.tournament = tournamentId;
+    existingNews.tournament = tournamentId || null;
+    existingNews.category = categoryId || null;
 
-    // Only update thumbnail if a valid string (URL) is provided
     if (typeof thumbnail === 'string' && thumbnail.trim() !== '') {
       existingNews.thumbnail = thumbnail.trim();
-    } else {
-        return res.status(400).json({ message: 'Thumbnail URL is required and must be a valid string.' });
     }
 
     await existingNews.save();
-
     res.status(200).json({ message: 'News updated successfully', news: existingNews });
   } catch (error) {
     console.error("Failed to update news:", error);
@@ -194,22 +191,14 @@ router.put('/:id', async (req, res) => {
 
 /**
  * ✅ DELETE /api/news/:id
- * Delete news item
  */
 router.delete('/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    console.log(`Attempting to delete news with ID: ${id}`);
-
-    const news = await News.findByIdAndDelete(id);
-
+    const news = await News.findByIdAndDelete(req.params.id);
     if (!news) {
       return res.status(404).json({ message: 'News not found' });
     }
-
-    console.log(`News with ID ${id} deleted.`);
     res.status(200).json({ message: 'News deleted successfully' });
-
   } catch (error) {
     console.error("Error deleting news:", error);
     res.status(500).json({ error: 'Failed to delete news', details: error.message });
