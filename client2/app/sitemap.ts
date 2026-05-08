@@ -16,6 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     '/terms',
     '/disclaimer',
     '/contact',
+    '/notification',
   ].map((route) => ({
     url: `${BASE_URL}${route}`,
     lastModified: new Date(),
@@ -36,7 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Dynamic News routes
     const newsRes = await axios.get(`${API_URL}/news`);
     const newsRoutes = newsRes.data.map((n: any) => ({
-      url: `${BASE_URL}/news/${slugify(n.title)}--${n._id}`,
+      url: `${BASE_URL}/news/${n.slug}`,
       lastModified: new Date(),
       changeFrequency: 'monthly' as const,
       priority: 0.5,

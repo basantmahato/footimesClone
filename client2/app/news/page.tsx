@@ -15,6 +15,7 @@ interface NewsItem {
   description: string;
   tournament?: { name: string };
   category?: { name: string };
+  slug: string;
   createdAt: string;
 }
 
@@ -93,7 +94,7 @@ const NewsPage = () => {
                 {newsCardsToShow.map((item) => (
                   <div
                     key={item._id}
-                    onClick={() => router.push(`/news/${slugify(item.title)}--${item._id}`)}
+                    onClick={() => router.push(`/news/${item.slug}`)}
                     className="cursor-pointer transition-transform hover:scale-[1.02]"
                   >
                     <NewsCard
@@ -119,7 +120,7 @@ const NewsPage = () => {
               {newsListToShow.map((item) => (
                 <div
                   key={item._id}
-                  onClick={() => router.push(`/news/${slugify(item.title)}--${item._id}`)}
+                  onClick={() => router.push(`/news/${item.slug}`)}
                   className="group cursor-pointer flex flex-col space-y-4 bg-zinc-900/50 border border-white/5 rounded-3xl p-3 transition-all hover:bg-zinc-900 hover:border-white/10"
                 >
                   <div className="relative aspect-video overflow-hidden rounded-2xl bg-zinc-900">

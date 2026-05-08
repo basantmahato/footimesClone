@@ -96,22 +96,28 @@ const AdminNotificationsPage = () => {
             
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className={`text-[10px] font-black uppercase ${themeMuted} tracking-widest`}>Message</label>
+                <label htmlFor="notif-message" className={`text-[10px] font-black uppercase ${themeMuted} tracking-widest`}>Message</label>
                 <textarea 
+                  id="notif-message"
                   value={form.message}
                   onChange={(e) => setForm({...form, message: e.target.value})}
                   className={`w-full ${themeInput} border rounded-xl p-3 text-sm min-h-[100px] outline-none focus:ring-1 focus:ring-pink-500 transition-all`}
                   placeholder="e.g. Match starting in 10 minutes!"
                   required
+                  title="Enter the notification message"
+                  aria-label="Notification Message"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className={`text-[10px] font-black uppercase ${themeMuted} tracking-widest`}>Alert Type</label>
+                <label htmlFor="notif-type" className={`text-[10px] font-black uppercase ${themeMuted} tracking-widest`}>Alert Type</label>
                 <select 
+                  id="notif-type"
                   value={form.type}
                   onChange={(e) => setForm({...form, type: e.target.value as any})}
                   className={`w-full ${themeInput} border rounded-xl p-3 text-sm outline-none focus:ring-1 focus:ring-pink-500 appearance-none`}
+                  title="Select the type of alert"
+                  aria-label="Alert Type"
                 >
                   <option value="info">Information (Pink)</option>
                   <option value="success">Success (Green)</option>
