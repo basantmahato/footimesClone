@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Image from "next/image";
+import StandingsTable from "@/components/StandingsTable";
 
 const defaultTeamLogo = "https://cdn-icons-png.flaticon.com/512/1099/1099672.png";
 const defaultTournamentDetailsLogo = "https://static.vecteezy.com/system/resources/thumbnails/037/049/153/small_2x/football-match-clipart-flat-design-icon-isolated-on-transparent-background-3d-render-sport-and-exercise-concept-png.png";
@@ -40,20 +41,35 @@ interface Props {
   initialInfo: Tournament;
 }
 
+interface TeamStats {
+  team: string;
+  mp: number;
+  w: number;
+  d: number;
+  l: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  pts: number;
+  logo?: string;
+}
+
 export default function TournamentDetailsClient({ id, initialInfo }: Props) {
   const [activeTab, setActiveTab] = useState("fixtures");
   const [tournamentInfo, setTournamentInfo] = useState<Tournament>(initialInfo);
   const [allFixtures, setAllFixtures] = useState<Fixture[]>([]);
   const [allLiveScores, setAllLiveScores] = useState<LiveScore[]>([]);
+  const [standings, setStandings] = useState<TeamStats[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTournamentData = async () => {
       try {
-        const [fixturesRes, liveScoresRes] = await Promise.all([
+        const [fixturesRes, liveScoresRes, standingsRes] = await Promise.all([
           axios.get(`https://api.footimes.com/api/fixtures?tournament=${id}`),
-          axios.get(`https://api.footimes.com/api/livescore/all`)
+          axios.get(`https://api.footimes.com/api/livescore/all`),
+          axios.get(`https://api.footimes.com/api/livescore/standings/${initialInfo.name}`)
         ]);
 
         setAllFixtures(fixturesRes.data);
@@ -61,6 +77,7 @@ export default function TournamentDetailsClient({ id, initialInfo }: Props) {
           (ls: LiveScore) => ls.tournamentName === initialInfo.name
         );
         setAllLiveScores(tournamentLiveScores);
+        setStandings(standingsRes.data);
       } catch (err) {
         console.error("Failed to fetch tournament details:", err);
         setError("Failed to load tournament data. Please try again later.");
@@ -277,9 +294,8 @@ export default function TournamentDetailsClient({ id, initialInfo }: Props) {
       )}
 
       {activeTab === "standings" && (
-        <div className="flex flex-col items-center justify-center py-20 bg-zinc-900/50 rounded-3xl border border-dashed border-zinc-800">
-          <span className="text-4xl mb-4">✨</span>
-          <p className="text-gray-400 font-medium">Standings Coming Soon</p>
+        <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+          <StandingsTable standings={standings} />
         </div>
       )}
     </div>

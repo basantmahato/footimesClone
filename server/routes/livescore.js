@@ -172,4 +172,66 @@ router.delete('/:fixtureId', async (req, res) => {
 
 
 
+// GET /api/livescore/standings/:tournamentName
+router.get('/standings/:tournamentName', async (req, res) => {
+  try {
+    const { tournamentName } = req.params;
+    const endedMatches = await LiveMatch.find({
+      tournamentName: tournamentName,
+      status: 'ended'
+    });
+
+    const standingsMap = {};
+
+    endedMatches.forEach(match => {
+      const { teamA, teamB, scoreA, scoreB, resultA, resultB } = match;
+
+      if (!standingsMap[teamA]) {
+        standingsMap[teamA] = { team: teamA, mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
+      }
+      if (!standingsMap[teamB]) {
+        standingsMap[teamB] = { team: teamB, mp: 0, w: 0, d: 0, l: 0, gf: 0, ga: 0, gd: 0, pts: 0 };
+      }
+
+      const teamAStats = standingsMap[teamA];
+      const teamBStats = standingsMap[teamB];
+
+      teamAStats.mp += 1;
+      teamBStats.mp += 1;
+      teamAStats.gf += scoreA;
+      teamAStats.ga += scoreB;
+      teamBStats.gf += scoreB;
+      teamBStats.ga += scoreA;
+      teamAStats.gd = teamAStats.gf - teamAStats.ga;
+      teamBStats.gd = teamBStats.gf - teamBStats.ga;
+
+      if (resultA === 'win') {
+        teamAStats.w += 1;
+        teamAStats.pts += 3;
+        teamBStats.l += 1;
+      } else if (resultB === 'win') {
+        teamBStats.w += 1;
+        teamBStats.pts += 3;
+        teamAStats.l += 1;
+      } else if (resultA === 'draw' || resultB === 'draw') {
+        teamAStats.d += 1;
+        teamAStats.pts += 1;
+        teamBStats.d += 1;
+        teamBStats.pts += 1;
+      }
+    });
+
+    const standings = Object.values(standingsMap).sort((a, b) => {
+      if (b.pts !== a.pts) return b.pts - a.pts;
+      if (b.gd !== a.gd) return b.gd - a.gd;
+      return b.gf - a.gf;
+    });
+
+    res.json(standings);
+  } catch (err) {
+    console.error('GET /livescore/standings error:', err);
+    res.status(500).json({ error: 'Failed to calculate standings' });
+  }
+});
+
 export default router;
