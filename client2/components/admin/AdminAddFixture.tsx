@@ -162,7 +162,7 @@ export default function AdminAddFixture() {
             <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Match Round</label>
             <select
               className={`w-full ${themeInput} rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-1 focus:ring-black dark:focus:ring-white outline-none transition-all`}
-              value={form.matchRound}
+              value={form.matchRound || ""}
               onChange={(e) => setForm({ ...form, matchRound: e.target.value })}
               aria-label="Select Match Round"
               title="Select Match Round"
@@ -221,7 +221,7 @@ export default function AdminAddFixture() {
             <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest ml-1`}>Tournament</label>
             <select
               className={`w-full ${themeInput} rounded-lg px-4 py-2.5 text-sm font-medium focus:ring-1 focus:ring-black dark:focus:ring-white outline-none`}
-              value={form.tournament}
+              value={typeof form.tournament === "object" ? (form.tournament as any)?._id : (form.tournament || "")}
               onChange={(e) => setForm({ ...form, tournament: e.target.value })}
               disabled={loadingTournaments}
               aria-label="Select Tournament"

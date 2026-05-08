@@ -227,7 +227,7 @@ export default function AdminLiveUpdatePage() {
               className={`w-14 ${themeInput} rounded-lg px-3 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-black dark:focus:ring-white`}
             />
             <select
-              value={player.position}
+              value={player.position || ""}
               onChange={(e) => updateArray(field, i, "position", e.target.value)}
               className={`flex-1 ${themeInput} rounded-lg px-3 py-2 text-xs font-medium outline-none focus:ring-1 focus:ring-black dark:focus:ring-white appearance-none`}
               aria-label="Player Position"
@@ -291,7 +291,7 @@ export default function AdminLiveUpdatePage() {
                 <div className="space-y-1.5">
                   <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest block ml-1`}>Result Status</label>
                   <select
-                    value={form.resultA}
+                    value={form.resultA || ""}
                     onChange={(e) => setForm({ 
                       ...form, 
                       resultA: e.target.value, 
@@ -332,7 +332,7 @@ export default function AdminLiveUpdatePage() {
                 <div className="space-y-1.5">
                   <label className={`text-[10px] font-bold uppercase ${themeTextMuted} tracking-widest block mr-1`}>Result Status</label>
                   <select
-                    value={form.resultB}
+                    value={form.resultB || ""}
                     onChange={(e) => setForm({ 
                       ...form, 
                       resultB: e.target.value, 

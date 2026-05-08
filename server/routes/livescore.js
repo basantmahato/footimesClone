@@ -1,5 +1,6 @@
 import express from 'express';
 import LiveMatch from '../models/LiveMatch.js';
+import Fixture from '../models/Fixture.js';
 
 const router = express.Router();
 
@@ -29,13 +30,27 @@ router.patch('/:fixtureId/status', async (req, res) => {
       updateFields.startedAt = null;
     }
 
-    const updated = await LiveMatch.findOneAndUpdate(
+    let updated = await LiveMatch.findOneAndUpdate(
       { fixtureId },
       updateFields,
       { new: true }
     );
 
-    if (!updated) return res.status(404).json({ error: 'Match not found' });
+    if (!updated) {
+      // If not found, try to create it from the Fixture data
+      const fixture = await Fixture.findById(fixtureId).populate('tournament');
+      if (!fixture) return res.status(404).json({ error: 'Fixture not found' });
+
+      updated = new LiveMatch({
+        fixtureId,
+        teamA: fixture.teamA,
+        teamB: fixture.teamB,
+        tournamentName: fixture.tournament?.name || 'Unknown',
+        status: status === 'reset' ? 'not_started' : status,
+        startedAt: startedAt || (status === 'live' ? new Date() : null),
+      });
+      await updated.save();
+    }
 
     const io = req.app.get('io');
 
