@@ -14,6 +14,7 @@ interface NewsItem {
   title: string;
   description: string;
   tournament?: { name: string };
+  category?: { name: string };
   createdAt: string;
 }
 
@@ -28,14 +29,16 @@ const NewsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [newsRes, tournamentsRes] = await Promise.all([
+        const [newsRes, tournamentsRes, categoriesRes] = await Promise.all([
           axios.get("https://api.footimes.com/api/news"),
-          axios.get("https://api.footimes.com/api/news/tournaments")
+          axios.get("https://api.footimes.com/api/news/tournaments"),
+          axios.get("https://api.footimes.com/api/categories")
         ]);
 
         setNewsData(newsRes.data);
         const tournamentNames = tournamentsRes.data.map((t: any) => t.name);
-        setTabs(["Latest", ...tournamentNames]);
+        const categoryNames = categoriesRes.data.map((c: any) => c.name);
+        setTabs(["Latest", ...tournamentNames, ...categoryNames]);
       } catch (err) {
         console.error("Failed to load news data", err);
       } finally {
@@ -49,7 +52,9 @@ const NewsPage = () => {
   const getFilteredNews = () => {
     if (activeTab === "Latest") return newsData;
     return newsData.filter(
-      (item) => item.tournament?.name?.toLowerCase() === activeTab.toLowerCase()
+      (item) => 
+        item.tournament?.name?.toLowerCase() === activeTab.toLowerCase() ||
+        item.category?.name?.toLowerCase() === activeTab.toLowerCase()
     );
   };
 
@@ -95,7 +100,7 @@ const NewsPage = () => {
                       image={item.thumbnail}
                       tittle={item.title}
                       description={item.description}
-                      tournament={item.tournament?.name}
+                      tournament={item.tournament?.name || item.category?.name || "General"}
                       hour={formatTimeAgo(item.createdAt)}
                     />
                   </div>
@@ -132,7 +137,7 @@ const NewsPage = () => {
                         {formatTimeAgo(item.createdAt)}
                       </span>
                       <span className="text-[10px] text-pink-500 font-black uppercase">
-                        {item.tournament?.name || "General"}
+                        {item.tournament?.name || item.category?.name || "General"}
                       </span>
                     </div>
 

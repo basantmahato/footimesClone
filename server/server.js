@@ -13,6 +13,7 @@ import fixtureRoutes from './routes/fixtureRoutes.js';
 import livescoreRoutes from './routes/livescore.js';
 import leadRoutes from './routes/leadRoutes.js';
 import categoryRoutes from './routes/categoryRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 /* ------------ Config ------------ */
 dotenv.config();
@@ -67,6 +68,7 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/fixtures', fixtureRoutes);
 app.use('/api/leads', leadRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 /* ------------ Socket Events ------------ */
 io.on('connection', socket => {

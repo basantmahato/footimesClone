@@ -13,6 +13,7 @@ interface NewsItem {
   title: string;
   description: string;
   tournament?: { name: string };
+  category?: { name: string };
   createdAt: string;
 }
 
@@ -105,7 +106,7 @@ export default async function NewsArticlePage({ params }: { params: Promise<{ sl
 
       <div className="flex flex-wrap items-center gap-3 mb-8 text-[11px] font-bold uppercase tracking-[0.1em]">
         <span className="bg-pink-600 px-3 py-1 rounded-full text-white">
-          {news.tournament?.name || "General"}
+          {news.tournament?.name || news.category?.name || "General"}
         </span>
         <span className="text-zinc-500">•</span>
         <time dateTime={news.createdAt} className="text-zinc-400">
