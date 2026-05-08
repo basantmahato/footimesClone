@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { format } from 'date-fns';
-import { Mail, Trash2, CheckCircle, Clock, Archive } from 'lucide-react';
+import { Mail, Trash2, CheckCircle, Clock, Archive, Copy } from 'lucide-react';
 import { useAdminTheme } from './AdminThemeContext';
 import { toast } from 'react-toastify';
 
@@ -124,6 +124,16 @@ const AdminLeadsPage = () => {
                 </div>
 
                 <div className="flex flex-row md:flex-col gap-2 justify-end">
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(lead.email);
+                      toast.success(`Email copied: ${lead.email}`);
+                    }}
+                    className={`p-2 rounded-lg ${isDarkMode ? 'bg-pink-500/10 text-pink-500 hover:bg-pink-500/20' : 'bg-pink-500/5 text-pink-600 hover:bg-pink-500/10'} transition-all`}
+                    title="Copy Email to Clipboard"
+                  >
+                    <Copy size={16} />
+                  </button>
                   {lead.status === 'new' && (
                     <button 
                       onClick={() => updateStatus(lead._id, 'read')}

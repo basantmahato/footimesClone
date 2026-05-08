@@ -52,7 +52,7 @@ export default function ContactPage() {
             <div>
               <h3 className="font-bold text-xl mb-1">Email Us</h3>
               <p className="text-gray-400">support@footimes.com</p>
-              <p className="text-gray-400">info@footimes.com</p>
+          
             </div>
           </div>
 
@@ -62,7 +62,7 @@ export default function ContactPage() {
             </div>
             <div>
               <h3 className="font-bold text-xl mb-1">Our Location</h3>
-              <p className="text-gray-400">Ranchi, Jharkhand</p>
+              <p className="text-gray-400">Jamshedpur, Jharkhand</p>
               <p className="text-gray-400">India</p>
             </div>
           </div>
