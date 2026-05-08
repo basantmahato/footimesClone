@@ -12,11 +12,6 @@ const leadSchema = new mongoose.Schema({
     trim: true,
     lowercase: true
   },
-  phone: {
-    type: String,
-    required: true,
-    trim: true
-  },
   message: {
     type: String,
     required: true
