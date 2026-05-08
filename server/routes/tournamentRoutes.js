@@ -6,11 +6,11 @@ const router = express.Router();
 // ➕ Add new tournament
 router.post('/', async (req, res) => {
   try {
-    const { name, location } = req.body;
+    const { name, location, status } = req.body;
     const existing = await Tournament.findOne({ name });
     if (existing) return res.status(400).json({ message: 'Tournament already exists' });
 
-    const tournament = new Tournament({ name, location });
+    const tournament = new Tournament({ name, location, status });
     await tournament.save();
     res.status(201).json(tournament);
   } catch (err) {
@@ -43,11 +43,11 @@ router.delete('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, location } = req.body;
+    const { name, location, status } = req.body;
 
     const updated = await Tournament.findByIdAndUpdate(
       id,
-      { name, location },
+      { name, location, status },
       { new: true }
     );
 
