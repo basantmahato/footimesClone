@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Metadata } from "next";
 import ShareButton from "@/components/ShareButton";
 import Script from "next/script";
+import { extractIdFromSlug } from "@/utils/slugify";
 
 interface NewsItem {
   _id: string;
@@ -20,7 +21,8 @@ async function getNewsItem(slugArray: string[]): Promise<NewsItem | null> {
   try {
     if (!slugArray || slugArray.length === 0) return null;
     const slug = slugArray[0];
-    const res = await axios.get(`https://api.footimes.com/api/news/slug/${slug}`);
+    const id = extractIdFromSlug(slug);
+    const res = await axios.get(`https://api.footimes.com/api/news/${id}`);
     return res.data;
   } catch (error) {
     return null;
